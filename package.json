@@ -1,0 +1,48 @@
+{
+  "name": "repo-explorer",
+  "version": "0.0.1",
+  "description": "repo",
+  "scripts": {
+    "install": "cd app; npm i",
+    "start": "npm run compile && electron ./app",
+    "watch": "tsc -w",
+    "restart": "tsc && electron ./app data/text.txt",
+    "restartfast": "electron ./app",
+    "tslint": "tslint src/**",
+    "tslintFix": "tslint --fix src/**",
+    "compile": "rimraf app/out && tsc",
+    "pack": "npm run compile && build --dir",
+    "dist": "npm run compile && build -w nsis -l",
+    "distDir": "npm run compile && build -w dir -l dir -m dir",
+    "distMacDir": "npm run compile && build -m dir",
+    "distWindowsDir": "npm run compile && build -w dir",
+    "distLinuxDir": "npm run compile && build -l dir"
+  },
+  "build": {
+    "appId": "shybyte.repo-explorer",
+    "category": "Development",
+    "win": {},
+    "linux": {
+      "target": [
+        "deb",
+        "AppImage"
+      ]
+    }
+  },
+  "author": "shybyte",
+  "devDependencies": {
+    "@types/d3": "^4.7.0",
+    "@types/electron": "^1.4.30",
+    "@types/node": "^6.0.56",
+    "@types/react": "^15.0.16",
+    "@types/react-dom": "^0.14.23",
+    "@types/react-svg-pan-zoom": "^2.5.0",
+    "@types/yargs": "^6.5.0",
+    "electron": "1.4.13",
+    "electron-builder": "13.0.0",
+    "rimraf": "^2.5.4",
+    "tslint": "^4.2.0",
+    "typescript": "^2.2.1"
+  },
+  "dependencies": {}
+}
