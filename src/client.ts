@@ -3,6 +3,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as react from "react";
 import * as reactDom from "react-dom";
+import {scanRepo} from "./scan-repo";
 import {ReactSVGPanZoom} from 'react-svg-pan-zoom';
 
 const reactSVGPanZoom = react.createFactory(ReactSVGPanZoom);
@@ -15,7 +16,8 @@ interface NodeType {
 const {svg, circle, title, g, text} = react.DOM;
 const diameter = 400;
 
-const data = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data/flare.json'), {encoding: 'utf-8'}));
+const data = (scanRepo('.', ['node_modules', '.git', '.idea']));
+
 const pack = d3.pack<NodeType>()
   .size([diameter - 4, diameter - 4]);
 
@@ -38,7 +40,7 @@ interface DemoState {
 
 class Demo extends react.Component<any, DemoState> {
   viewer: ReactSVGPanZoom;
-  state =  {
+  state = {
     zoom: 1
   }
 
@@ -80,7 +82,7 @@ class Demo extends react.Component<any, DemoState> {
               style: {
                 fontSize: 12 / s.zoom + 'px'
               }
-            }, d.data.name.substring(0, d.r / 3 *s.zoom)) : []
+            }, d.data.name.substring(0, d.r / 3 * s.zoom)) : []
           )
         )
       )
