@@ -1,5 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import {IgnoreInstance} from "ignore";
+const ignore = require('ignore');
 
 export type FileSystemNode = FileNode | DirectoryNode;
 
@@ -21,10 +23,19 @@ interface RepoScan extends DirectoryNode {
 }
 
 
-export function scanRepo(directory: string, ignore: string[]): RepoScan {
-  const files = fs.readdirSync(directory)
-    .filter(f => ignore.indexOf(f) == -1)
-    .map(filename => path.join(directory, filename));
+export function scanRepo(directory: string): RepoScan {
+  const gitIgnoreFileName = path.join(directory, '.gitignore');
+  const ignoreInstance: IgnoreInstance = ignore();
+  ignoreInstance.add(".git");
+  if (fs.existsSync(gitIgnoreFileName)) {
+    ignoreInstance.add(fs.readFileSync(gitIgnoreFileName).toString())
+  }
+  return scanRepoInternal(directory, ignoreInstance);
+}
+
+function scanRepoInternal(directory: string, ignore: IgnoreInstance): RepoScan {
+  const files = ignore.filter(fs.readdirSync(directory)
+    .map(filename => path.join(directory, filename)));
   return {
     _type: 'DirectoryNode',
     name: directory,
@@ -32,12 +43,12 @@ export function scanRepo(directory: string, ignore: string[]): RepoScan {
     children: files.map(fileName => {
       const stat = fs.statSync(fileName);
       if (stat.isDirectory()) {
-        return scanRepo(fileName, ignore);
+        return scanRepoInternal(fileName, ignore);
       } else {
         const fileNode: FileNode = {
           _type: 'FileNode',
           size: stat.size,
-          name: fileName
+          name: path.basename(fileName)
         };
         return fileNode;
       }

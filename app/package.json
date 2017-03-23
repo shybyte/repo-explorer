@@ -7,6 +7,7 @@
   "devDependencies": {},
   "dependencies": {
     "d3": "^4.7.3",
+    "ignore": "^3.2.6",
     "react": "^15.4.2",
     "react-dom": "^15.4.2",
     "react-svg-pan-zoom": "^2.5.0",

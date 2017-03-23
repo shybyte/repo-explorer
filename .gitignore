@@ -1,7 +1,6 @@
 ﻿.idea
 .idea/
 .private
-typings
 node_modules
 dist
 tmp

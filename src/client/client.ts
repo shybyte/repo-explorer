@@ -13,7 +13,7 @@ electron.ipcRenderer.on(CommandsToClient.selectRepo, (_event: any, repoPath: any
 });
 
 function loadRepo(repoPath = '.') {
-  const data = scanRepo(repoPath, ['node_modules', '.git', '.idea']);
+  const data = scanRepo(repoPath);
   console.log('loadedRepo', repoPath, data);
   const root = d3.hierarchy<FileSystemNode>(data)
     .sum(function (d) {

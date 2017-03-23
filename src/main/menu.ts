@@ -9,7 +9,6 @@ export function initMenu() {
         {
           label: 'Select Repo',
           click(_item: any, focusedWindow: Electron.BrowserWindow) {
-            console.log(focusedWindow);
             const folder = dialog.showOpenDialog({properties: ['openDirectory']})[0];
             if (folder) {
               focusedWindow.webContents.send(CommandsToClient.selectRepo, folder);
