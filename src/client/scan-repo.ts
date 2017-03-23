@@ -1,20 +1,20 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
-type FileSystemNode = FileNode | DirectoryNode;
+export type FileSystemNode = FileNode | DirectoryNode;
 
 interface FileSystemNodeCommon {
   name: string;
   size: number;
 }
 
-interface FileNode extends FileSystemNodeCommon {
+export interface FileNode extends FileSystemNodeCommon {
   _type: 'FileNode';
 }
 
-interface DirectoryNode extends FileSystemNodeCommon {
+export interface DirectoryNode extends FileSystemNodeCommon {
   _type: 'DirectoryNode';
-  children: FileSystemNode[]
+  children: FileSystemNode[];
 }
 
 interface RepoScan extends DirectoryNode {

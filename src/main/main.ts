@@ -1,6 +1,7 @@
 import * as path from "path";
 import * as url from "url";
 import {app, BrowserWindow} from "electron";
+import {initMenu} from "./menu";
 
 
 // Keep a global reference of the window object, if you don't, the window will
@@ -11,9 +12,11 @@ function createWindow() {
   // Create the browser window.
   mainWindow = new BrowserWindow({width: 800, height: 600});
 
+  initMenu();
+
   // and load the index.html of the app.
   mainWindow.loadURL(url.format({
-    pathname: path.join(__dirname, '..', '..', 'index.html'),
+    pathname: path.join(__dirname, '..', '..', '..', 'index.html'),
     protocol: 'file:',
     slashes: true
   }));

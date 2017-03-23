@@ -2,7 +2,7 @@
   "name": "repo-explorer",
   "version": "0.0.1",
   "description": "",
-  "main": "./out/src/main.js",
+  "main": "./out/src/main/main.js",
   "license": "CC0-1.0",
   "devDependencies": {},
   "dependencies": {

@@ -1,44 +1,20 @@
 import * as d3 from "d3";
-import * as fs from "fs";
-import * as path from "path";
 import * as react from "react";
-import * as reactDom from "react-dom";
-import {scanRepo} from "./scan-repo";
+import {HierarchyNode} from "d3-hierarchy";
+const {svg, circle, title, g, text} = react.DOM;
 import {ReactSVGPanZoom} from 'react-svg-pan-zoom';
-
+import {FileSystemNode} from "../scan-repo";
 const reactSVGPanZoom = react.createFactory(ReactSVGPanZoom);
 
-interface NodeType {
-  name: string;
-  size: number;
+interface MainComponentProps {
+  tree: HierarchyNode<FileSystemNode>;
 }
 
-const {svg, circle, title, g, text} = react.DOM;
-const diameter = 400;
-
-const data = (scanRepo('.', ['node_modules', '.git', '.idea']));
-
-const pack = d3.pack<NodeType>()
-  .size([diameter - 4, diameter - 4]);
-
-const format = d3.format(",d");
-
-const root = d3.hierarchy<NodeType>(data)
-  .sum(function (d) {
-    return d.size;
-  })
-  .sort(function (a, b) {
-    return (b.value || 0) - (a.value || 0);
-  });
-
-console.log(data);
-console.log('out:', pack(root).descendants());
-
-interface DemoState {
+interface MainComponentState {
   zoom: number;
 }
 
-class Demo extends react.Component<any, DemoState> {
+class MainComponent extends react.Component<MainComponentProps, MainComponentState> {
   viewer: ReactSVGPanZoom;
   state = {
     zoom: 1
@@ -49,6 +25,10 @@ class Demo extends react.Component<any, DemoState> {
   }
 
   render() {
+    const diameter = 400;
+    const pack = d3.pack<FileSystemNode>()
+      .size([diameter - 4, diameter - 4]);
+    const format = d3.format(",d");
     const s = this.state;
     return reactSVGPanZoom({
       width: diameter,
@@ -69,7 +49,7 @@ class Demo extends react.Component<any, DemoState> {
       },
       g({
           transform: 'translate(2,2)'
-        }, pack(root).descendants().map(d =>
+        }, pack(this.props.tree).descendants().map(d =>
           g({
               key: (d.parent ? d.parent.data.name : '') + '/' + d.data.name,
               className: d.children ? "node" : "leaf node",
@@ -90,9 +70,4 @@ class Demo extends react.Component<any, DemoState> {
   }
 }
 
-const demo = react.createFactory(Demo);
-
-
-const appEl = document.getElementById('app');
-
-reactDom.render(demo({}), appEl);
+export const mainComponent = react.createFactory(MainComponent);

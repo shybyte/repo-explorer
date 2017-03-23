@@ -1,5 +1,5 @@
 import {assert} from 'chai';
-import {scanRepo} from "../../src/scan-repo";
+import {scanRepo} from "../../src/client/scan-repo";
 
 describe('scan repo', () => {
   describe('integration', () => {
@@ -10,5 +10,5 @@ describe('scan repo', () => {
     });
 
 
-  })
+  });
 });
