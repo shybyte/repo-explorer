@@ -1,12 +1,15 @@
 import * as d3 from "d3";
 import * as react from "react";
-import {HierarchyNode} from "d3-hierarchy";
 const {svg, circle, title, g, text, div} = react.DOM;
-import {FileSystemNode} from "../scan-repo";
+import {FileSystemNode, filterRepoScan, RepoScan} from "../scan-repo";
+import {toolbarComponent} from "./toolbar";
+
+import {IgnoreInstance} from "ignore";
+const ignore = require('ignore');
 
 interface MainComponentProps {
   parentElement: HTMLElement;
-  tree: HierarchyNode<FileSystemNode>;
+  repoScan: RepoScan;
 }
 
 interface  Point {
@@ -20,7 +23,10 @@ interface MainComponentState {
   height: number;
   center: Point;
   translate: Point;
+  filter: string;
 }
+
+const FILTER_KEY = 'ignoreFilter';
 
 class MainComponent extends react.Component<MainComponentProps, MainComponentState> {
   mouseDown: Point | undefined;
@@ -30,10 +36,12 @@ class MainComponent extends react.Component<MainComponentProps, MainComponentSta
     width: 1,
     height: 1,
     center: {x: 0.5, y: 0.5},
-    translate: {x: 0, y: 0}
+    translate: {x: 0, y: 0},
+    filter: ''
   }
 
   componentWillMount() {
+    this.setState({filter: localStorage.getItem(FILTER_KEY) || ''});
     window.addEventListener('resize', this.onResize);
     this.onResize();
 
@@ -83,45 +91,67 @@ class MainComponent extends react.Component<MainComponentProps, MainComponentSta
     });
   }
 
+  onChangeFilter = (filter: string) => {
+    localStorage.setItem(FILTER_KEY, filter);
+    this.setState({filter});
+  }
+
   render() {
     const s = this.state;
     const {width, height, center} = s;
     const diameter = Math.min(width, height);
     console.log('render', width, height, s.zoom);
-    const pack = d3.pack<FileSystemNode>()
-      .size([1, 1]);
+    const pack = d3.pack<FileSystemNode>().size([1, 1]);
     const format = d3.format(",d");
-    let descendants = pack(this.props.tree).descendants();
+    const filter = this.state.filter;
+
+    console.log(filter);
+
+    const ignoreInstance: IgnoreInstance = ignore();
+    ignoreInstance.add(filter);
+    const filteredRepoScan = filterRepoScan(this.props.repoScan, ignoreInstance);
+    const root = d3.hierarchy<FileSystemNode>(filteredRepoScan)
+      .sum(function (d) {
+        return d.size;
+      })
+      .sort(function (a, b) {
+        return (b.value || 0) - (a.value || 0);
+      });
+
+
+    let descendants = pack(root).descendants();
     return div({
-      className: 'mainComponent',
-      onWheel: this.onWheel,
-      onMouseDown: this.onMouseDown,
-      onMouseMove: this.onMouseMove,
-      onMouseUp: this.onMouseUp,
-    }, svg({width, height},
-      g({
-          transform: `translate(${s.translate.x},${s.translate.y})`
-        }, descendants.map(d => {
-          const x = (d.x * s.zoom - center.x * s.zoom + 0.5) * diameter;
-          const y = (d.y * s.zoom - center.y * s.zoom + 0.5) * diameter;
-          return g({
-              key: (d.parent ? d.parent.data.name : '') + '/' + d.data.name,
-              className: d.children ? "node" : "leaf node",
-              transform: "translate(" + x + "," + y + ")"
-            },
-            circle({r: d.r * s.zoom * diameter}),
-            title({}, d.data.relativePath + "\n" + format(d.value!)),
-            !d.children ? text({
-              dy: '0.3em',
-              style: {
-                fontSize: '12px'
-              }
-            }, d.data.name.substring(0, d.r * diameter / 3 * s.zoom)) : []
-          );
-        }
+        className: 'mainComponent',
+        onWheel: this.onWheel,
+        onMouseDown: this.onMouseDown,
+        onMouseMove: this.onMouseMove,
+        onMouseUp: this.onMouseUp,
+      },
+      toolbarComponent({filter: filter, changeFilter: this.onChangeFilter}),
+      svg({width, height},
+        g({
+            transform: `translate(${s.translate.x},${s.translate.y})`
+          }, descendants.map(d => {
+            const x = (d.x * s.zoom - center.x * s.zoom + 0.5) * diameter;
+            const y = (d.y * s.zoom - center.y * s.zoom + 0.5) * diameter;
+            return g({
+                key: (d.parent ? d.parent.data.name : '') + '/' + d.data.name,
+                className: d.children ? "node" : "leaf node",
+                transform: "translate(" + x + "," + y + ")"
+              },
+              circle({r: d.r * s.zoom * diameter}),
+              title({}, d.data.relativePath + "\n" + format(d.value!)),
+              !d.children ? text({
+                dy: '0.3em',
+                style: {
+                  fontSize: '12px'
+                }
+              }, d.data.name.substring(0, d.r * diameter / 3 * s.zoom)) : []
+            );
+          }
+          )
         )
-      )
-    ));
+      ));
   }
 }
 

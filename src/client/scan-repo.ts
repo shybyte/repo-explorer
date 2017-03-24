@@ -20,11 +20,12 @@ export interface DirectoryNode extends FileSystemNodeCommon {
   children: FileSystemNode[];
 }
 
-interface RepoScan extends DirectoryNode {
+export interface RepoScan extends DirectoryNode {
 }
 
 
-export function scanRepo(repoFolder: string): RepoScan {
+export function scanRepo(repoFolderArg: string): RepoScan {
+  const repoFolder = path.resolve(repoFolderArg);
   const gitIgnoreFileName = path.join(repoFolder, '.gitignore');
   const ignoreInstance: IgnoreInstance = ignore();
   ignoreInstance.add(".git");
@@ -61,5 +62,18 @@ function scanRepoInternal(repoFolder: string, directory: string, ignore: IgnoreI
 }
 
 function relativePath(repoFolder: string, path: string) {
-  return path.slice(repoFolder.length);
+  return path.slice(repoFolder.length + 1);
+}
+
+export function filterRepoScan(repoScan: RepoScan, ignore: IgnoreInstance): RepoScan {
+  function filterRepoScanInternal(children: FileSystemNode[]): FileSystemNode[] {
+    return children.filter(child => !ignore.ignores(child.relativePath)).map(child => {
+      if (child._type === 'DirectoryNode') {
+        return {...child, children: filterRepoScanInternal(child.children)};
+      }
+      return child;
+    });
+  }
+
+  return {...repoScan, children: filterRepoScanInternal(repoScan.children)};
 }

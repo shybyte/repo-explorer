@@ -1,5 +1,7 @@
 import {assert} from 'chai';
-import {scanRepo} from "../../src/client/scan-repo";
+import {filterRepoScan, scanRepo} from "../../src/client/scan-repo";
+import {IgnoreInstance} from "ignore";
+const ignore = require('ignore');
 
 describe('scan repo', () => {
   describe('integration', () => {
@@ -7,6 +9,15 @@ describe('scan repo', () => {
     it('works', () => {
       console.log(JSON.stringify(scanRepo('./app'), null, 2));
       assert.equal(1, 1);
+    });
+
+    it('filterRepoScan', () => {
+      const repoScan = scanRepo('test/data');
+      const ignoreInstance: IgnoreInstance = ignore();
+      ignoreInstance.add("ignored");
+      const filteredRepoScan = filterRepoScan(repoScan, ignoreInstance);
+      console.log(JSON.stringify(filteredRepoScan, null, 2));
+      assert.equal(filteredRepoScan.children.length, 2);
     });
 
 
