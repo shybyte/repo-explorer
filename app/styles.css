@@ -10,9 +10,8 @@ html, body {
 }
 
 
-#app .reactSVGPanZoom svg {
-  height: 100%;
-  width: 100%;
+#app svg {
+  user-select: none;
 }
 
 .node {
@@ -60,4 +59,3 @@ svg {
   border: 1px solid silver;
 }
 
-.reactSVGPanZoom {}

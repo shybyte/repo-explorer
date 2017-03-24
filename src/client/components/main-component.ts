@@ -1,75 +1,124 @@
 import * as d3 from "d3";
 import * as react from "react";
 import {HierarchyNode} from "d3-hierarchy";
-const {svg, circle, title, g, text} = react.DOM;
-import {ReactSVGPanZoom} from 'react-svg-pan-zoom';
+const {svg, circle, title, g, text, div} = react.DOM;
 import {FileSystemNode} from "../scan-repo";
-const reactSVGPanZoom = react.createFactory(ReactSVGPanZoom);
 
 interface MainComponentProps {
   parentElement: HTMLElement;
   tree: HierarchyNode<FileSystemNode>;
 }
 
+interface  Point {
+  x: number,
+  y: number
+}
+
 interface MainComponentState {
   zoom: number;
+  width: number;
+  height: number;
+  center: Point;
+  translate: Point;
 }
 
 class MainComponent extends react.Component<MainComponentProps, MainComponentState> {
-  viewer: ReactSVGPanZoom;
+  mouseDown: Point | undefined;
+
   state = {
-    zoom: 1
+    zoom: 1,
+    width: 1,
+    height: 1,
+    center: {x: 0.5, y: 0.5},
+    translate: {x: 0, y: 0}
   }
 
-  componentDidMount() {
-    this.viewer.fitToViewer();
+  componentWillMount() {
     window.addEventListener('resize', this.onResize);
+    this.onResize();
+
   }
 
-  onResize= () => {
+  onResize = () => {
     this.forceUpdate();
+    const {parentElement} = this.props;
+    const width: number = parentElement.offsetWidth;
+    const height: number = parentElement.offsetHeight;
+    this.setState({width, height});
   }
 
+  onWheel = (ev: React.WheelEvent<HTMLElement>) => {
+    this.setState({
+      zoom: Math.max(1, this.state.zoom * (1 - Math.sign(ev.deltaY) / 10))
+    });
+  }
+
+  onMouseDown = (event: React.MouseEvent<HTMLElement>) => {
+    this.mouseDown = {x: event.clientX, y: event.clientY};
+    console.log('mouseDown', event, this.mouseDown);
+  }
+
+  onMouseMove = (event: React.MouseEvent<HTMLElement>) => {
+    if (!this.mouseDown) {
+      return;
+    }
+    this.setState({
+      translate: {
+        x: event.clientX - this.mouseDown.x,
+        y: event.clientY - this.mouseDown.y
+      }
+    });
+  }
+
+  onMouseUp = () => {
+    this.mouseDown = undefined;
+    const {translate, center, zoom, width, height} = this.state;
+    const diameter = Math.min(width, height);
+    this.setState({
+      translate: {x: 0, y: 0},
+      center: {
+        x: center.x - translate.x / zoom / diameter,
+        y: center.y - translate.y / zoom / diameter,
+      }
+    });
+  }
 
   render() {
-    const {parentElement} = this.props;
-    const width = parentElement.offsetWidth;
-    const height = parentElement.offsetHeight;
-    console.log(width, height);
-    const pack = d3.pack<FileSystemNode>()
-      .size([width - 4, height - 4]);
-    const format = d3.format(",d");
     const s = this.state;
-    return reactSVGPanZoom({
-      width, height,
-      tool: 'auto',
-      detectAutoPan: false,
-      className: 'reactSVGPanZoom',
-      background: '#ffffff' as any,
-      ref: (viewer: ReactSVGPanZoom) => {
-        this.viewer = viewer;
-      },
-      onChangeValue: (value) => {
-        this.setState({zoom: value.a});
-      }
+    const {width, height, center} = s;
+    const diameter = Math.min(width, height);
+    console.log('render', width, height, s.zoom);
+    const pack = d3.pack<FileSystemNode>()
+      .size([1, 1]);
+    const format = d3.format(",d");
+    let descendants = pack(this.props.tree).descendants();
+    return div({
+      className: 'mainComponent',
+      onWheel: this.onWheel,
+      onMouseDown: this.onMouseDown,
+      onMouseMove: this.onMouseMove,
+      onMouseUp: this.onMouseUp,
     }, svg({width, height},
       g({
-          transform: 'translate(2,2)'
-        }, pack(this.props.tree).descendants().map(d =>
-          g({
+          transform: `translate(${s.translate.x},${s.translate.y})`
+        }, descendants.map(d => {
+          const x = (d.x * s.zoom - center.x * s.zoom + 0.5) * diameter;
+          const y = (d.y * s.zoom - center.y * s.zoom + 0.5) * diameter;
+          return g({
               key: (d.parent ? d.parent.data.name : '') + '/' + d.data.name,
               className: d.children ? "node" : "leaf node",
-              transform: "translate(" + d.x + "," + d.y + ")"
+              transform: "translate(" + x + "," + y + ")"
             },
-            circle({r: d.r}),
+            circle({r: d.r * s.zoom * diameter}),
             title({}, d.data.relativePath + "\n" + format(d.value!)),
             !d.children ? text({
               dy: '0.3em',
               style: {
-                fontSize: 12 / s.zoom + 'px'
+                fontSize: '12px'
               }
-            }, d.data.name.substring(0, d.r / 3 * s.zoom)) : []
-          )
+            }, d.data.name.substring(0, d.r * diameter / 3 * s.zoom)) : []
+          );
+        }
         )
       )
     ));
