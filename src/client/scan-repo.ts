@@ -1,8 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import sloc = require('sloc');
-import {IgnoreInstance} from "ignore";
-const ignore = require('ignore');
+import ignore = require('ignore');
 
 export type FileSystemNode = FileNode | DirectoryNode;
 

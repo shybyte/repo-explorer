@@ -3,9 +3,7 @@ import * as react from "react";
 const {svg, circle, title, g, text, div} = react.DOM;
 import {FileSystemNode, filterRepoScan, RepoScan} from "../scan-repo";
 import {toolbarComponent} from "./toolbar";
-
-import {IgnoreInstance} from "ignore";
-const ignore = require('ignore');
+import ignore = require('ignore');
 
 interface MainComponentProps {
   parentElement: HTMLElement;

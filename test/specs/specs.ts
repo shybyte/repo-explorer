@@ -1,8 +1,7 @@
 import {assert} from 'chai';
 import {filterRepoScan, scanRepo} from "../../src/client/scan-repo";
-import {IgnoreInstance} from "ignore";
 import sloc = require('sloc');
-const ignore = require('ignore');
+import ignore = require('ignore');
 
 describe('scan repo', () => {
   describe('integration', () => {
@@ -14,7 +13,7 @@ describe('scan repo', () => {
 
     it('filterRepoScan', () => {
       const repoScan = scanRepo('test/data');
-      const ignoreInstance: IgnoreInstance = ignore();
+      const ignoreInstance = ignore();
       ignoreInstance.add("ignored");
       const filteredRepoScan = filterRepoScan(repoScan, ignoreInstance);
       console.log(JSON.stringify(filteredRepoScan, null, 2));
