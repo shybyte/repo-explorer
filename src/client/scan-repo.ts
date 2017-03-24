@@ -31,30 +31,35 @@ export function scanRepo(repoFolderArg: string): RepoScan {
   const ignoreInstance: IgnoreInstance = ignore();
   ignoreInstance.add(".git");
   if (fs.existsSync(gitIgnoreFileName)) {
-    ignoreInstance.add(fs.readFileSync(gitIgnoreFileName).toString());
+    const gitIgnoreFileContent = fs.readFileSync(gitIgnoreFileName).toString();
+    ignoreInstance.add(gitIgnoreFileContent);
+  } else {
+    console.warn('Missing .gitignore!');
   }
-  return scanRepoInternal(repoFolder, repoFolder, ignoreInstance);
+  return scanRepoInternal(repoFolder, '', ignoreInstance);
 }
 
-function scanRepoInternal(repoFolder: string, directory: string, ignore: IgnoreInstance): RepoScan {
-  const files = ignore.filter(fs.readdirSync(directory)
-    .map(filename => path.join(directory, filename)));
+function scanRepoInternal(repoFolder: string, relativDirectoryPath: string, ignore: IgnoreInstance): RepoScan {
+  const completeDirectoryPath = path.join(repoFolder, relativDirectoryPath);
+  const relativeFilePaths = ignore.filter(fs.readdirSync(completeDirectoryPath)
+    .map(filename => path.join(relativDirectoryPath, filename)));
   return {
     _type: 'DirectoryNode',
-    name: path.basename(directory),
-    relativePath: relativePath(repoFolder, directory),
+    name: path.basename(relativDirectoryPath),
+    relativePath: relativDirectoryPath,
     size: 0,
-    children: files.map(fileName => {
-      const stat = fs.statSync(fileName);
+    children: relativeFilePaths.map(relativePath => {
+      const completeFilePath = path.join(repoFolder, relativePath);
+      const stat = fs.statSync(completeFilePath);
       if (stat.isDirectory()) {
-        return scanRepoInternal(repoFolder, fileName, ignore);
+        return scanRepoInternal(repoFolder, relativePath, ignore);
       } else {
         const fileNode: FileNode = {
           _type: 'FileNode',
           size: stat.size,
-          name: path.basename(fileName),
-          relativePath: relativePath(repoFolder, fileName),
-          slocResult: countLoc(fileName)
+          name: path.basename(relativePath),
+          relativePath: relativePath,
+          slocResult: countLoc(completeFilePath)
         };
         return fileNode;
       }
@@ -69,10 +74,6 @@ function countLoc(fileName: string): SlocResult | undefined {
   } catch (_error) {
     return undefined;
   }
-}
-
-function relativePath(repoFolder: string, path: string) {
-  return path.slice(repoFolder.length + 1);
 }
 
 export function filterRepoScan(repoScan: RepoScan, ignore: IgnoreInstance): RepoScan {

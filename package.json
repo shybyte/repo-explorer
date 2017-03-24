@@ -10,6 +10,7 @@
     "restart": "tsc && electron ./app data/text.txt",
     "restartfast": "electron ./app",
     "test": "mocha app/out/test/**/*.js",
+    "compileAndTest": "tsc && mocha app/out/test/**/*.js",
     "tslint": "tslint src/**/*.ts test/**/*.ts",
     "tslintFix": "tslint --fix src/**/*.ts test/**/*.ts",
     "compile": "rimraf app/out && tsc",

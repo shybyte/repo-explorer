@@ -6,7 +6,7 @@ import ignore = require('ignore');
 describe('scan repo', () => {
   describe('integration', () => {
 
-    it.only('works', () => {
+    it('works', () => {
       console.log(JSON.stringify(scanRepo('./app'), null, 2));
       assert.equal(1, 1);
     });
