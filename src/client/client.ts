@@ -7,12 +7,15 @@ import {CommandsToClient} from "../common/commands";
 import {mainComponent} from "./components/main-component";
 
 
+const DEFAULT_REPO_KEY = 'defaultRepo';
+
 electron.ipcRenderer.on(CommandsToClient.selectRepo, (_event: any, repoPath: any) => {
   console.log('Load Repo', repoPath);
+  localStorage.setItem(DEFAULT_REPO_KEY, repoPath);
   loadRepo(repoPath);
 });
 
-function loadRepo(repoPath = '.') {
+function loadRepo(repoPath: string) {
   const data = scanRepo(repoPath);
   console.log('loadedRepo', repoPath, data);
   const root = d3.hierarchy<FileSystemNode>(data)
@@ -29,4 +32,4 @@ function loadRepo(repoPath = '.') {
 }
 
 
-loadRepo();
+loadRepo(localStorage.getItem(DEFAULT_REPO_KEY) || '.');
