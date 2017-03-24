@@ -7,6 +7,7 @@ export type FileSystemNode = FileNode | DirectoryNode;
 
 interface FileSystemNodeCommon {
   name: string;
+  relativePath: string;
   size: number;
 }
 
@@ -23,36 +24,42 @@ interface RepoScan extends DirectoryNode {
 }
 
 
-export function scanRepo(directory: string): RepoScan {
-  const gitIgnoreFileName = path.join(directory, '.gitignore');
+export function scanRepo(repoFolder: string): RepoScan {
+  const gitIgnoreFileName = path.join(repoFolder, '.gitignore');
   const ignoreInstance: IgnoreInstance = ignore();
   ignoreInstance.add(".git");
   if (fs.existsSync(gitIgnoreFileName)) {
     ignoreInstance.add(fs.readFileSync(gitIgnoreFileName).toString())
   }
-  return scanRepoInternal(directory, ignoreInstance);
+  return scanRepoInternal(repoFolder, repoFolder, ignoreInstance);
 }
 
-function scanRepoInternal(directory: string, ignore: IgnoreInstance): RepoScan {
+function scanRepoInternal(repoFolder: string, directory: string, ignore: IgnoreInstance): RepoScan {
   const files = ignore.filter(fs.readdirSync(directory)
     .map(filename => path.join(directory, filename)));
   return {
     _type: 'DirectoryNode',
-    name: directory,
+    name: path.basename(directory),
+    relativePath: relativePath(repoFolder, directory),
     size: 0,
     children: files.map(fileName => {
       const stat = fs.statSync(fileName);
       if (stat.isDirectory()) {
-        return scanRepoInternal(fileName, ignore);
+        return scanRepoInternal(repoFolder, fileName, ignore);
       } else {
         const fileNode: FileNode = {
           _type: 'FileNode',
           size: stat.size,
-          name: path.basename(fileName)
+          name: path.basename(fileName),
+          relativePath: relativePath(repoFolder, fileName)
         };
         return fileNode;
       }
     })
 
   };
+}
+
+function relativePath(repoFolder: string, path: string) {
+  return path.slice(repoFolder.length);
 }

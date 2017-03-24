@@ -62,7 +62,7 @@ class MainComponent extends react.Component<MainComponentProps, MainComponentSta
               transform: "translate(" + d.x + "," + d.y + ")"
             },
             circle({r: d.r}),
-            title({}, d.data.name + "\n" + format(d.value!)),
+            title({}, d.data.relativePath + "\n" + format(d.value!)),
             !d.children ? text({
               dy: '0.3em',
               style: {
