@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import sloc = require('sloc');
 import {IgnoreInstance} from "ignore";
 const ignore = require('ignore');
 
@@ -9,6 +10,7 @@ interface FileSystemNodeCommon {
   name: string;
   relativePath: string;
   size: number;
+  slocResult?: SlocResult;
 }
 
 export interface FileNode extends FileSystemNodeCommon {
@@ -52,13 +54,22 @@ function scanRepoInternal(repoFolder: string, directory: string, ignore: IgnoreI
           _type: 'FileNode',
           size: stat.size,
           name: path.basename(fileName),
-          relativePath: relativePath(repoFolder, fileName)
+          relativePath: relativePath(repoFolder, fileName),
+          slocResult: countLoc(fileName)
         };
         return fileNode;
       }
     })
 
   };
+}
+
+function countLoc(fileName: string): SlocResult | undefined {
+  try {
+    return sloc(fs.readFileSync(fileName, 'utf8'), path.extname(fileName).slice(1));
+  } catch (_error) {
+    return undefined;
+  }
 }
 
 function relativePath(repoFolder: string, path: string) {

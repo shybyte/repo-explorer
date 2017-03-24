@@ -105,14 +105,12 @@ class MainComponent extends react.Component<MainComponentProps, MainComponentSta
     const format = d3.format(",d");
     const filter = this.state.filter;
 
-    console.log(filter);
-
     const ignoreInstance: IgnoreInstance = ignore();
     ignoreInstance.add(filter);
     const filteredRepoScan = filterRepoScan(this.props.repoScan, ignoreInstance);
     const root = d3.hierarchy<FileSystemNode>(filteredRepoScan)
       .sum(function (d) {
-        return d.size;
+        return (d.slocResult && d.slocResult.source) || 0;
       })
       .sort(function (a, b) {
         return (b.value || 0) - (a.value || 0);
