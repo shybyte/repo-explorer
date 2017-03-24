@@ -7,6 +7,7 @@ import {FileSystemNode} from "../scan-repo";
 const reactSVGPanZoom = react.createFactory(ReactSVGPanZoom);
 
 interface MainComponentProps {
+  parentElement: HTMLElement;
   tree: HierarchyNode<FileSystemNode>;
 }
 
@@ -22,17 +23,25 @@ class MainComponent extends react.Component<MainComponentProps, MainComponentSta
 
   componentDidMount() {
     this.viewer.fitToViewer();
+    window.addEventListener('resize', this.onResize);
   }
 
+  onResize= () => {
+    this.forceUpdate();
+  }
+
+
   render() {
-    const diameter = 400;
+    const {parentElement} = this.props;
+    const width = parentElement.offsetWidth;
+    const height = parentElement.offsetHeight;
+    console.log(width, height);
     const pack = d3.pack<FileSystemNode>()
-      .size([diameter - 4, diameter - 4]);
+      .size([width - 4, height - 4]);
     const format = d3.format(",d");
     const s = this.state;
     return reactSVGPanZoom({
-      width: diameter,
-      height: diameter,
+      width, height,
       tool: 'auto',
       detectAutoPan: false,
       className: 'reactSVGPanZoom',
@@ -43,10 +52,7 @@ class MainComponent extends react.Component<MainComponentProps, MainComponentSta
       onChangeValue: (value) => {
         this.setState({zoom: value.a});
       }
-    }, svg({
-        width: diameter,
-        height: diameter,
-      },
+    }, svg({width, height},
       g({
           transform: 'translate(2,2)'
         }, pack(this.props.tree).descendants().map(d =>

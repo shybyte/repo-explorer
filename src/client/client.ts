@@ -26,9 +26,12 @@ function loadRepo(repoPath: string) {
       return (b.value || 0) - (a.value || 0);
     });
 
-  const appEl = document.getElementById('app');
+  const appEl= document.getElementById('app')!;
 
-  reactDom.render(mainComponent({tree: root}), appEl);
+  reactDom.render(mainComponent({
+    tree: root,
+    parentElement: appEl
+  }), appEl);
 }
 
 
