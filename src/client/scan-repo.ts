@@ -29,7 +29,7 @@ export function scanRepo(repoFolder: string): RepoScan {
   const ignoreInstance: IgnoreInstance = ignore();
   ignoreInstance.add(".git");
   if (fs.existsSync(gitIgnoreFileName)) {
-    ignoreInstance.add(fs.readFileSync(gitIgnoreFileName).toString())
+    ignoreInstance.add(fs.readFileSync(gitIgnoreFileName).toString());
   }
   return scanRepoInternal(repoFolder, repoFolder, ignoreInstance);
 }
