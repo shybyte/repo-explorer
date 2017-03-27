@@ -4,10 +4,13 @@ const {svg, circle, title, g, text, div} = react.DOM;
 import {FileSystemNode, filterRepoScan, RepoScan} from "../scan-repo";
 import {toolbarComponent} from "./toolbar";
 import ignore = require('ignore');
+import {GitStats} from "../git";
+import {HierarchyNode} from "d3-hierarchy";
 
 interface MainComponentProps {
   parentElement: HTMLElement;
   repoScan: RepoScan;
+  gitStats: GitStats;
 }
 
 interface  Point {
@@ -96,6 +99,7 @@ class MainComponent extends react.Component<MainComponentProps, MainComponentSta
 
   render() {
     const s = this.state;
+    const {fileStats} = this.props.gitStats;
     const {width, height, center} = s;
     const diameter = Math.min(width, height);
     console.log('render', width, height, s.zoom);
@@ -114,6 +118,20 @@ class MainComponent extends react.Component<MainComponentProps, MainComponentSta
         return (b.value || 0) - (a.value || 0);
       });
 
+    function getCommitCount(d: HierarchyNode<FileSystemNode>) {
+      return (fileStats[d.data.relativePath] && fileStats[d.data.relativePath].commitCount) || 0;
+    }
+
+    const getCircleStyle = (d: HierarchyNode<FileSystemNode>) => {
+      if (d.children) {
+        return {};
+      }
+      const commitCount = getCommitCount(d);
+      const hotness = Math.floor(Math.min(commitCount / 36, 100) * 255);
+      return {
+        fill: `rgb(255,${255 - hotness}, ${255 - hotness})`
+      }
+    }
 
     let descendants = pack(root).descendants();
     return div({
@@ -135,8 +153,8 @@ class MainComponent extends react.Component<MainComponentProps, MainComponentSta
                 className: d.children ? "node" : "leaf node",
                 transform: "translate(" + x + "," + y + ")"
               },
-              circle({r: d.r * s.zoom * diameter}),
-              title({}, d.data.relativePath + "\n" + format(d.value!)),
+              circle({r: d.r * s.zoom * diameter, style: getCircleStyle(d)}),
+              title({}, d.data.relativePath + "\n" + format(d.value!) + '\n' + getCommitCount(d)),
               !d.children ? text({
                 dy: '0.3em',
                 style: {

@@ -5,6 +5,7 @@ import {FileSystemNode, scanRepo} from "./scan-repo";
 import * as electron from "electron";
 import {CommandsToClient} from "../common/commands";
 import {mainComponent} from "./components/main-component";
+import {readGitStats} from "./git";
 
 
 const DEFAULT_REPO_KEY = 'defaultRepo';
@@ -15,13 +16,14 @@ electron.ipcRenderer.on(CommandsToClient.selectRepo, (_event: any, repoPath: any
   loadRepo(repoPath);
 });
 
-function loadRepo(repoPath: string) {
+async function loadRepo(repoPath: string)  {
   const repoScan = scanRepo(repoPath);
+  const gitStats = await readGitStats(repoPath);
   console.log('loadedRepo', repoPath, repoScan);
   const appEl= document.getElementById('app')!;
 
   reactDom.render(mainComponent({
-    repoScan: repoScan,
+    repoScan, gitStats,
     parentElement: appEl
   }), appEl);
 }
