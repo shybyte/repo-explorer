@@ -64,7 +64,6 @@ class MainComponent extends react.Component<MainComponentProps, MainComponentSta
 
   onMouseDown = (event: React.MouseEvent<HTMLElement>) => {
     this.mouseDown = {x: event.clientX, y: event.clientY};
-    console.log('mouseDown', event, this.mouseDown);
   }
 
   onMouseMove = (event: React.MouseEvent<HTMLElement>) => {
@@ -151,7 +150,11 @@ class MainComponent extends react.Component<MainComponentProps, MainComponentSta
             return g({
                 key: (d.parent ? d.parent.data.name : '') + '/' + d.data.name,
                 className: d.children ? "node" : "leaf node",
-                transform: "translate(" + x + "," + y + ")"
+                transform: "translate(" + x + "," + y + ")",
+                onClick() {
+                  const fileStat = fileStats[d.data.relativePath];
+                  console.log(JSON.stringify(fileStat, null, 2));
+                }
               },
               circle({r: d.r * s.zoom * diameter, style: getCircleStyle(d)}),
               title({}, d.data.relativePath + "\n" + format(d.value!) + '\n' + getCommitCount(d)),
